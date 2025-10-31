@@ -45,23 +45,23 @@ impl Browser {
         use std::cell::RefCell;
         
         // Get window position and size for alignment
-        let window_pos = window.outer_position().unwrap_or(LogicalPosition::new(100.0, 100.0));
         let window_size = window.outer_size();
         let nav_height = 56.0;
+        let content_window_id = window.id(); // Store ID before moving window
         
-        // Adjust main window to account for nav bar
+        // Adjust main window size to account for nav bar (height only)
         window.set_inner_size(LogicalSize::new(window_size.width as f64, (window_size.height as f64) - nav_height));
-        window.set_position(LogicalPosition::new(window_pos.x, window_pos.y + nav_height));
         
         // Nav bar window (top, 56px, no decorations, always on top, clickable)
+        // Position will be at same location as main window, but will stay on top
         let nav_window = WindowBuilder::new()
             .with_title("")
             .with_decorations(false) // No title bar, no borders
             .with_inner_size(LogicalSize::new(window_size.width as f64, nav_height))
-            .with_position(LogicalPosition::new(window_pos.x, window_pos.y))
             .with_always_on_top(true) // Keep nav always on top
             .build(&event_loop)
             .context("Failed to create nav window")?;
+        let nav_window_id = nav_window.id(); // Store ID before moving nav_window
         
         // Create content webview in original window
         let content_webview = WebViewBuilder::new(window)?
@@ -110,10 +110,6 @@ impl Browser {
         if let Ok(u) = Self::local_home_file_url() { 
             let _ = content_wv_rc.borrow().load_url(&u); 
         }
-        
-        // Store window IDs for synchronization
-        let nav_window_id = nav_window.id();
-        let content_window_id = window.id();
 
         let nav_for_keys = navigation.clone();
 
@@ -130,19 +126,8 @@ impl Browser {
                 }
                 Event::WindowEvent {
                     window_id,
-                    event: WindowEvent::Moved(pos),
-                } => {
-                    // Sync nav window position when content window moves
-                    if window_id == content_window_id {
-                        if let Ok(w) = nav_window.request_redraw() {
-                            // Note: Direct window manipulation may be limited in wry 0.24
-                            // The nav window should stay on top due to with_always_on_top(true)
-                        }
-                    }
-                }
-                Event::WindowEvent {
-                    window_id,
-                    event: WindowEvent::CloseRequested,
+                    event: WindowEvent::CloseRequested { .. },
+                    ..
                 } => {
                     // Close both windows when one is closed
                     if window_id == content_window_id || window_id == nav_window_id {
