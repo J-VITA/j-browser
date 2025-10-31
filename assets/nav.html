@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nav</title>
+  <style>
+    html, body { height: 100%; margin: 0; background: #1e1e1e; color: #e6e6e6; font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+    .bar { height: 56px; display: flex; align-items: center; gap: 8px; padding: 0 12px; }
+    .btn { width: 36px; height: 36px; border: none; background: #2a2a2a; color: #e6e6e6; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .addr { flex: 1; height: 36px; border-radius: 6px; border: 1px solid #2a2a2a; background: #1b1b1b; color: #e6e6e6; outline: none; padding: 0 12px; font-size: 14px; }
+  </style>
+  <script>
+    (function(){
+      function send(op, payload){
+        try { window.ipc.postMessage(JSON.stringify({ op, payload })); } catch(e) { console.log(e); }
+      }
+      window.addEventListener('DOMContentLoaded', function(){
+        const addr = document.getElementById('addr');
+        document.getElementById('back').onclick    = () => send('back');
+        document.getElementById('forward').onclick = () => send('forward');
+        document.getElementById('refresh').onclick = () => send('refresh');
+        document.getElementById('home').onclick    = () => send('home');
+        document.getElementById('go').onclick      = () => send('navigate', { url: addr.value });
+        addr.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); send('navigate', { url: addr.value }); }});
+
+        // Rust -> JS로 주소 갱신 (postMessage를 문자열로 받음)
+        window.addEventListener('message', function(ev){
+          try { const msg = typeof ev.data === 'string' ? JSON.parse(ev.data) : ev.data; if(msg.op==='setAddress' && msg.url){ addr.value = msg.url; } } catch(e){}
+        });
+      });
+    })();
+  </script>
+</head>
+<body>
+  <div class="bar">
+    <button id="back" class="btn" title="뒤로">←</button>
+    <button id="forward" class="btn" title="앞으로">→</button>
+    <button id="refresh" class="btn" title="새로고침">⟳</button>
+    <button id="home" class="btn" title="홈">⌂</button>
+    <input id="addr" class="addr" placeholder="주소 또는 검색어" />
+    <button id="go" class="btn" title="이동">↵</button>
+  </div>
+</body>
+</html>
+

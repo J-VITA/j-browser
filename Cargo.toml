@@ -1,0 +1,48 @@
+[package]
+name = "syncflo-browser"
+version = "0.1.0"
+edition = "2021"
+authors = ["jaykim <jaykim@kakao.com>"]
+description = "AI-powered browsing assistant browser built with Rust"
+license = "MIT OR Apache-2.0"
+repository = ""
+
+[dependencies]
+# WebView framework
+wry = "0.24"
+
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+
+# HTTP client for AI API calls
+reqwest = { version = "0.11", features = ["json"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+base64 = "0.13"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Logging
+log = "0.4"
+env_logger = "0.11"
+
+# URL handling
+url = "2.5"
+urlencoding = "2.1"
+
+# HTML parsing (for AI processing)
+scraper = "0.19"
+
+# Command line arguments (if needed)
+clap = { version = "4.4", features = ["derive"] }
+
+[dev-dependencies]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
